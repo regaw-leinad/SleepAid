@@ -15,12 +15,14 @@ import java.util.UUID;
 
 public class SleepAid extends JavaPlugin implements Listener {
 
+    private static final int FIVE_SECONDS = 100;
+    private static final int MORNING_TIME = 23459;
+
     private Map<UUID, Integer> playerToSleepingTask;
 
     @Override
     public void onEnable() {
         this.playerToSleepingTask = new HashMap<>();
-
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -44,7 +46,7 @@ public class SleepAid extends JavaPlugin implements Listener {
 
             this.playerToSleepingTask.remove(uuid);
             setDay(world);
-        }, 100);
+        }, FIVE_SECONDS);
 
         this.playerToSleepingTask.put(uuid, taskId);
     }
@@ -63,7 +65,7 @@ public class SleepAid extends JavaPlugin implements Listener {
     }
 
     private void setDay(World world) {
-        world.setTime(23459);
+        world.setTime(MORNING_TIME);
 
         if (world.isThundering()) {
             world.setThundering(false);
