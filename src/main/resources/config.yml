@@ -1,0 +1,11 @@
+# How long the player has to sleep for, in seconds, before changing to day (1 - 5)
+# 5 seconds is the default amount in Minecraft
+sleepSeconds: 5
+
+# What the time is set to after sleeping (0 - 23999)
+# 23459 is the default time in Minecraft
+wakeUpTime: 23459
+
+# Broadcasts a message for everyone that gets in bed: "<name> is sleeping..."
+# If this is set to false, the only message that is broadcast is the first person to get in bed
+announceSleeping: true

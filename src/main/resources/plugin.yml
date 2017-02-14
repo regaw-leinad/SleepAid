@@ -3,3 +3,8 @@ version: 1.0.0
 main: com.danwager.mc.sleep.SleepAid
 author: Dan Wager
 description: Aids sleeping on survival servers by allowing one person to sleep away the night
+
+commands:
+  sleepaid:
+    description: The main Sleep Aid command
+    usage: /<command>

@@ -2,6 +2,9 @@ package com.danwager.mc.sleep;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,15 +18,19 @@ import java.util.UUID;
 
 public class SleepAid extends JavaPlugin implements Listener {
 
-    private static final int FIVE_SECONDS = 100;
-    private static final int MORNING_TIME = 23459;
-
     private Map<UUID, Integer> playerToSleepingTask;
+    private int sleepTicks;
+    private int wakeupTime;
+    private boolean announceSleeping;
 
     @Override
     public void onEnable() {
         this.playerToSleepingTask = new HashMap<>();
+
         Bukkit.getPluginManager().registerEvents(this, this);
+
+        saveDefaultConfig();
+        reload();
     }
 
     @EventHandler
@@ -37,7 +44,9 @@ public class SleepAid extends JavaPlugin implements Listener {
 
         UUID uuid = player.getUniqueId();
 
-        Bukkit.broadcastMessage(player.getDisplayName() + " is sleeping...");
+        if (shouldAnnounceSleeping()) {
+            Bukkit.broadcastMessage(player.getDisplayName() + " is sleeping...");
+        }
 
         int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
             if (!this.playerToSleepingTask.containsKey(uuid)) {
@@ -46,7 +55,7 @@ public class SleepAid extends JavaPlugin implements Listener {
 
             this.playerToSleepingTask.remove(uuid);
             setDay(world);
-        }, FIVE_SECONDS);
+        }, this.sleepTicks);
 
         this.playerToSleepingTask.put(uuid, taskId);
     }
@@ -60,12 +69,33 @@ public class SleepAid extends JavaPlugin implements Listener {
         }
     }
 
+    private void reload() {
+        reloadConfig();
+
+        FileConfiguration config = getConfig();
+
+        int sleepSeconds = config.getInt("sleepSeconds", 5);
+        if (sleepSeconds < 1) {
+            sleepSeconds = 1;
+        } else if (sleepSeconds > 5) {
+            sleepSeconds = 5;
+        }
+
+        this.sleepTicks = sleepSeconds * 20;
+        this.wakeupTime = config.getInt("wakeUpTime", 23459);
+        this.announceSleeping = config.getBoolean("announceSleeping", true);
+    }
+
+    private boolean shouldAnnounceSleeping() {
+        return this.announceSleeping || this.playerToSleepingTask.size() == 0;
+    }
+
     private boolean isOverworld(World world) {
         return world.getEnvironment() == World.Environment.NORMAL;
     }
 
     private void setDay(World world) {
-        world.setTime(MORNING_TIME);
+        world.setTime(this.wakeupTime);
 
         if (world.isThundering()) {
             world.setThundering(false);
@@ -76,5 +106,23 @@ public class SleepAid extends JavaPlugin implements Listener {
             world.setStorm(false);
             world.setWeatherDuration(0);
         }
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage("Usage: /sleepaid reload");
+            return true;
+        }
+
+        if (!args[0].equalsIgnoreCase("reload")) {
+            sender.sendMessage("Usage: /sleepaid reload");
+            return true;
+        }
+
+        reload();
+        sender.sendMessage("SleepAid config reloaded");
+
+        return true;
     }
 }
